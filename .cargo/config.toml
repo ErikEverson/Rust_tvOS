@@ -1,0 +1,47 @@
+[build]
+target-dir = "target"
+
+[env]
+RUST_BACKTRACE = "1"
+# We disable non-panic backtrace captures,
+# to avoid a heisen-segfault on certain Rust workspace tests.
+# See https://dittolive.slack.com/archives/CNGE71UEB/p1696426213084659
+RUST_LIB_BACKTRACE = "0"
+RUSTC_BOOTSTRAP = "1"
+DITTO_LOCAL_BUILD = "1"
+
+[alias]
+# Each SDK is its own bin entry point (with a common library for code reuse)
+rust-task = "run --manifest-path tools/xtask/Cargo.toml --bin rustsdk --"
+authtool-task = "run --manifest-path tools/xtask/Cargo.toml --bin authtool --"
+# For `rustflags` to be directory agnostic, we expect it to have been `cargo install`ed.
+
+[profile.release]
+# The two following settings may lead to very slightly slower binaries,
+# but should speed up compilation times
+incremental = true
+opt-level = 2
+
+[profile.release-with-debug]
+# Performance-optimized build, but include debug symbols. Useful for
+# performance analysis.
+inherits = "release"
+debug = true
+
+[profile.bench]
+# Make stack traces and flamegraphs yield useful info.
+debug = true
+
+[net]
+# enables fetching crates from our private Github, provided that the ssh key is allowed
+git-fetch-with-cli = true
+
+[target.armv7-unknown-linux-gnueabihf]
+linker = "arm-linux-gnueabihf-gcc"
+
+# Until we figure out a reliable way for `::ditto-test-macros`' `trybuild` to see this,
+# let's duplicate these _once_ over to the `Cargo.toml` at the root of the repo.
+[patch.crates-io.tracing-core]
+version = "0.1.32"
+git = "https://github.com/nerosnm/tracing.git"
+branch = "valid-len-slice"
